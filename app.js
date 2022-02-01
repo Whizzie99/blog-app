@@ -1,7 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-const Blog = require('./models/blog');
+const blogRoutes = require('./routes/blogRoutes');
 
 // express app
 const app = express();
@@ -11,8 +11,8 @@ const dbURI = 'mongodb+srv://whizzie:test12345@blog-site.m9can.mongodb.net/blogs
 mongoose.connect(dbURI, {useNewUrlParser: true, useUnifiedTopology: true})
 .then((result) =>{
     // listen for requests
-    app.listen(3000);
-    console.log('connected to db')
+    app.listen(5000);
+    console.log('connected to db');
 })
 .catch((err) => console.log(err));
 
@@ -23,7 +23,12 @@ app.set('view engine', 'ejs');
 
 // middleware & static files
 app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.use((req, res, next) => {
+    res.locals.path = req.path;
+    next();
+});
 
 
 // routes
@@ -36,24 +41,7 @@ app.get('/about', (req, res) => {
 });
 
 // blog routes
-app.get('/blogs', (req, res) =>{
-    Blog.find()
-    .then((result) => {
-        res.render('index', { title: 'All blogs', blogs: result })
-    })
-    .catch(err =>{
-        console.log(err);
-    })
-})
-
-app.get('/blogs/create', (req, res) => {
-    res.render('create', { title: 'create a new blog' });
-})
-
-// redirects
-// app.get('/about-us', (req, res) => {
-//     res.redirect('/about');
-// });
+app.use('/blogs', blogRoutes);
 
 // 404 page
 app.use((req, res) => {
